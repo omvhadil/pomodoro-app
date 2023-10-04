@@ -119,7 +119,7 @@ const formatTitle = (title) => {
         <hr />
         <div class="mt-2">
           <!-- list task -->
-          <div class="flex justify-between bg-slate-200 py-2 px-2 rounded-md">
+          <div class="flex justify-between bg-slate-200 py-3 px-2 rounded-md">
             <span class="font-semibold text-slate-600">Excemple Task One</span>
             <div class="flex text-slate-500">
               <button class="px-2" title="Edit"><i class="ri-edit-2-line"></i></button>
