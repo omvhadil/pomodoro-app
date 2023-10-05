@@ -16,11 +16,6 @@ const start = () => {
   return timeOut
 }
 
-const pause = (timeOut) => {
-  clearInterval(timeOut)
-  button.value = true
-}
-
 watch(second, () => {
   if (second.value === -1) {
     second.value = 59
@@ -159,12 +154,7 @@ onMounted(() => {})
         >
           START
         </button>
-        <button
-          v-if="!button"
-          class="text-white py-2 px-6 rounded-lg"
-          :class="formatTheme(fitur)"
-          @click="pause(start())"
-        >
+        <button v-if="!button" class="text-white py-2 px-6 rounded-lg" :class="formatTheme(fitur)">
           STOP
         </button>
       </div>
