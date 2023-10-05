@@ -141,7 +141,7 @@ const formatTitle = (title) => {
 
 <template>
   <div class="w-full h-[40%] absolute" :class="formatTheme(fitur)"></div>
-  <div class="w-full absolute top-[30%] lg:top-[17%]">
+  <div class="w-full absolute top-[30%] md:top-[24%] lg:top-[17%]">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
       <path
         fill="#ffffff"
@@ -150,7 +150,7 @@ const formatTitle = (title) => {
       ></path>
     </svg>
   </div>
-  <div class="mw-[400px] h-[100vh] mx-auto relative">
+  <div class="max-w-[550px] h-[100vh] mx-auto relative">
     <!-- header -->
     <header class="header w-full">
       <div class="container h-14 flex items-center justify-between">
