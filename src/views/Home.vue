@@ -1,9 +1,46 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
 const addTask = ref(false)
 const fitur = ref('working')
+const second = ref(0)
+const minute = ref(25)
+const button = ref(true)
+
+const start = () => {
+  let timeOut = setInterval(() => {
+    second.value--
+  }, 1000)
+  button.value = false
+  return timeOut
+}
+
+const pause = (timeOut) => {
+  clearInterval(timeOut)
+  button.value = true
+}
+
+watch(second, () => {
+  if (second.value === -1) {
+    second.value = 59
+    minute.value--
+  }
+})
+
+watch(minute, () => {
+  if (minute.value === -1) {
+    minute.value = 0
+    second.value = 0
+  }
+})
+
+const formatTime = (time) => {
+  if (time < 10) {
+    return `0${time}`
+  }
+  return time
+}
 
 const formatTheme = (theme) => {
   switch (theme) {
@@ -17,6 +54,7 @@ const formatTheme = (theme) => {
       return 'bg-gradient-to-t from-emerald-600 to-emerald-400'
   }
 }
+
 const formatTheme2 = (theme) => {
   switch (theme) {
     case 'working':
@@ -42,6 +80,8 @@ const formatTitle = (title) => {
       return 'Work Session'
   }
 }
+
+onMounted(() => {})
 </script>
 
 <template>
@@ -88,7 +128,9 @@ const formatTitle = (title) => {
         >
           <div v-if="fitur === 'working'" class="text-center leading-10">
             <p class="text-slate-400">Work Session</p>
-            <h1 class="text-5xl font-semibold">25:00</h1>
+            <h1 class="text-5xl font-semibold">
+              {{ formatTime(minute) }} : {{ formatTime(second) }}
+            </h1>
             <p class="text-slate-400">Minute - Second</p>
           </div>
           <div v-if="fitur === 'shortB'" class="text-center leading-10">
@@ -109,7 +151,22 @@ const formatTitle = (title) => {
         <h6>Time {{ formatTitle(fitur) }}</h6>
       </div>
       <div class="mt-6 flex justify-center">
-        <button class="text-white py-2 px-6 rounded-lg" :class="formatTheme(fitur)">START</button>
+        <button
+          v-if="button"
+          class="text-white py-2 px-6 rounded-lg"
+          :class="formatTheme(fitur)"
+          @click="start()"
+        >
+          START
+        </button>
+        <button
+          v-if="!button"
+          class="text-white py-2 px-6 rounded-lg"
+          :class="formatTheme(fitur)"
+          @click="pause(start())"
+        >
+          STOP
+        </button>
       </div>
       <div class="shadow-lg rounded-lg p-4 mt-4">
         <div class="flex justify-between pb-2">
