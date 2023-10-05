@@ -4,13 +4,25 @@ import { ref, watch } from 'vue'
 
 const addTask = ref(false)
 const fitur = ref('working')
-const second = ref(0)
-const minute = ref(25)
+const workMinute = ref(25)
+const workSecond = ref(0)
+const shortMinute = ref(5)
+const shortSecond = ref(0)
+const longMinute = ref(15)
+const longSecond = ref(0)
 const button = ref(false)
 let timeout
 
+const shound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-clock-tick-tock-fast-916.mp3')
+
 const timeCount = () => {
-  second.value--
+  if (fitur.value === 'working') {
+    workSecond.value--
+  } else if (fitur.value === 'shortB') {
+    shortSecond.value--
+  } else if (fitur.value === 'longB') {
+    longSecond.value--
+  }
   timeout = setTimeout(timeCount, 1000)
 }
 
@@ -26,17 +38,57 @@ function stopCount() {
   button.value = false
 }
 
-watch(second, () => {
-  if (second.value === -1) {
-    second.value = 59
-    minute.value--
+const resetWork = () => {
+  stopCount()
+  workMinute.value = 25
+  workSecond.value = 0
+  shortMinute.value = 5
+  shortSecond.value = 0
+  longMinute.value = 15
+  longSecond.value = 0
+}
+
+watch(workSecond, () => {
+  if (workSecond.value === -1) {
+    workSecond.value = 59
+    workMinute.value--
+  }
+})
+watch(shortSecond, () => {
+  if (shortSecond.value === -1) {
+    shortSecond.value = 59
+    shortMinute.value--
+  }
+})
+watch(longSecond, () => {
+  if (longSecond.value === -1) {
+    longSecond.value = 59
+    longMinute.value--
   }
 })
 
-watch(minute, () => {
-  if (minute.value === -1) {
-    minute.value = 0
-    second.value = 0
+watch(workMinute, () => {
+  if (workMinute.value === -1) {
+    workMinute.value = 0
+    workSecond.value = 0
+    shound.play()
+    resetWork()
+  }
+})
+watch(shortMinute, () => {
+  if (shortMinute.value === -1) {
+    shortMinute.value = 0
+    shortSecond.value = 0
+    shound.play()
+    resetWork()
+  }
+})
+watch(longMinute, () => {
+  if (longMinute.value === -1) {
+    longMinute.value = 0
+    longSecond.value = 0
+    shound.play()
+    resetWork()
   }
 })
 
@@ -110,13 +162,19 @@ const formatTitle = (title) => {
       </div>
     </header>
     <div class="flex justify-center gap-4 mt-8 text-white">
-      <button @click="fitur = 'working'" :class="fitur === 'working' ? 'font-bold' : ''">
+      <button
+        @click="(fitur = 'working'), resetWork()"
+        :class="fitur === 'working' ? 'font-bold' : ''"
+      >
         Working
       </button>
-      <button @click="fitur = 'shortB'" :class="fitur === 'shortB' ? 'font-bold' : ''">
+      <button
+        @click="(fitur = 'shortB'), resetWork()"
+        :class="fitur === 'shortB' ? 'font-bold' : ''"
+      >
         Short Break
       </button>
-      <button @click="fitur = 'longB'" :class="fitur === 'longB' ? 'font-bold' : ''">
+      <button @click="(fitur = 'longB'), resetWork()" :class="fitur === 'longB' ? 'font-bold' : ''">
         Long Break
       </button>
     </div>
@@ -133,7 +191,7 @@ const formatTitle = (title) => {
             <div class="text-center leading-10">
               <p class="text-slate-400">Work Session</p>
               <h1 class="text-5xl font-semibold">
-                {{ formatTime(minute) }} : {{ formatTime(second) }}
+                {{ formatTime(workMinute) }} : {{ formatTime(workSecond) }}
               </h1>
               <p class="text-slate-400">Minute - Second</p>
             </div>
@@ -141,14 +199,18 @@ const formatTitle = (title) => {
           <section class="short-break" v-if="fitur === 'shortB'">
             <div class="text-center leading-10">
               <p class="text-slate-400">Short Break</p>
-              <h1 class="text-5xl font-semibold">10:00</h1>
+              <h1 class="text-5xl font-semibold">
+                {{ formatTime(shortMinute) }} : {{ formatTime(shortSecond) }}
+              </h1>
               <p class="text-slate-400">Minute - Second</p>
             </div>
           </section>
           <section class="long-break" v-if="fitur === 'longB'">
             <div class="text-center leading-10">
               <p class="text-slate-400">Long Break</p>
-              <h1 class="text-5xl font-semibold">15:00</h1>
+              <h1 class="text-5xl font-semibold">
+                {{ formatTime(longMinute) }} : {{ formatTime(longSecond) }}
+              </h1>
               <p class="text-slate-400">Minute - Second</p>
             </div>
           </section>
@@ -163,7 +225,7 @@ const formatTitle = (title) => {
         <section class="work-session" v-if="fitur === 'working'">
           <button
             v-if="!button"
-            class="text-white py-2 px-6 rounded-lg"
+            class="text-white py-3 px-16 rounded-lg"
             :class="formatTheme(fitur)"
             @click="startCount()"
           >
@@ -171,7 +233,7 @@ const formatTitle = (title) => {
           </button>
           <button
             v-if="button"
-            class="text-white py-2 px-6 rounded-lg bg-gradient-to-t from-red-600 to-red-400"
+            class="text-white py-3 px-16 rounded-lg bg-gradient-to-t from-red-600 to-red-400"
             :class="formatTheme(fitur)"
             @click="stopCount()"
           >
@@ -181,15 +243,17 @@ const formatTitle = (title) => {
         <section class="short-break" v-if="fitur === 'shortB'">
           <button
             v-if="!button"
-            class="text-white py-2 px-6 rounded-lg"
+            class="text-white py-3 px-16 rounded-lg"
             :class="formatTheme(fitur)"
+            @click="startCount()"
           >
             START
           </button>
           <button
             v-if="button"
-            class="text-white py-2 px-6 rounded-lg bg-gradient-to-t from-red-600 to-red-400"
+            class="text-white py-3 px-16 rounded-lg bg-gradient-to-t from-red-600 to-red-400"
             :class="formatTheme(fitur)"
+            @click="stopCount()"
           >
             STOP
           </button>
@@ -197,15 +261,17 @@ const formatTitle = (title) => {
         <section class="long-break" v-if="fitur === 'longB'">
           <button
             v-if="!button"
-            class="text-white py-2 px-6 rounded-lg"
+            class="text-white py-3 px-16 rounded-lg"
             :class="formatTheme(fitur)"
+            @click="startCount()"
           >
             START
           </button>
           <button
             v-if="button"
-            class="text-white py-2 px-6 rounded-lg bg-gradient-to-t from-red-600 to-red-400"
+            class="text-white py-3 px-16 rounded-lg bg-gradient-to-t from-red-600 to-red-400"
             :class="formatTheme(fitur)"
+            @click="stopCount()"
           >
             STOP
           </button>
