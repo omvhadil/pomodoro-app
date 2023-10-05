@@ -1,19 +1,29 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 
 const addTask = ref(false)
 const fitur = ref('working')
 const second = ref(0)
 const minute = ref(25)
-const button = ref(true)
+const button = ref(false)
+let timeout
 
-const start = () => {
-  let timeOut = setInterval(() => {
-    second.value--
-  }, 1000)
+const timeCount = () => {
+  second.value--
+  timeout = setTimeout(timeCount, 1000)
+}
+
+function startCount() {
+  if (!button.value) {
+    button.value = true
+    timeCount()
+  }
+}
+
+function stopCount() {
+  clearTimeout(timeout)
   button.value = false
-  return timeOut
 }
 
 watch(second, () => {
@@ -44,7 +54,7 @@ const formatTheme = (theme) => {
     case 'shortB':
       return 'bg-gradient-to-t from-amber-600 to-amber-400'
     case 'longB':
-      return 'bg-gradient-to-t from-red-600 to-red-400'
+      return 'bg-gradient-to-t from-sky-600 to-sky-400'
     default:
       return 'bg-gradient-to-t from-emerald-600 to-emerald-400'
   }
@@ -57,7 +67,7 @@ const formatTheme2 = (theme) => {
     case 'shortB':
       return 'border-amber-500'
     case 'longB':
-      return 'border-red-500'
+      return 'border-sky-500'
     default:
       return 'border-emerald-500'
   }
@@ -75,8 +85,6 @@ const formatTitle = (title) => {
       return 'Work Session'
   }
 }
-
-onMounted(() => {})
 </script>
 
 <template>
@@ -113,7 +121,7 @@ onMounted(() => {})
       </button>
     </div>
     <!-- clock -->
-    <section>
+    <section class="clock">
       <div
         class="w-[250px] h-[250px] bg-white rounded-full mx-auto shadow-md mt-8 flex items-center justify-center"
       >
@@ -121,23 +129,29 @@ onMounted(() => {})
           class="w-[220px] h-[220px] bg-white rounded-full border-8 flex items-center justify-center"
           :class="formatTheme2(fitur)"
         >
-          <div v-if="fitur === 'working'" class="text-center leading-10">
-            <p class="text-slate-400">Work Session</p>
-            <h1 class="text-5xl font-semibold">
-              {{ formatTime(minute) }} : {{ formatTime(second) }}
-            </h1>
-            <p class="text-slate-400">Minute - Second</p>
-          </div>
-          <div v-if="fitur === 'shortB'" class="text-center leading-10">
-            <p class="text-slate-400">Short Break</p>
-            <h1 class="text-5xl font-semibold">10:00</h1>
-            <p class="text-slate-400">Minute - Second</p>
-          </div>
-          <div v-if="fitur === 'longB'" class="text-center leading-10">
-            <p class="text-slate-400">Long Break</p>
-            <h1 class="text-5xl font-semibold">15:00</h1>
-            <p class="text-slate-400">Minute - Second</p>
-          </div>
+          <section class="work-session" v-if="fitur === 'working'">
+            <div class="text-center leading-10">
+              <p class="text-slate-400">Work Session</p>
+              <h1 class="text-5xl font-semibold">
+                {{ formatTime(minute) }} : {{ formatTime(second) }}
+              </h1>
+              <p class="text-slate-400">Minute - Second</p>
+            </div>
+          </section>
+          <section class="short-break" v-if="fitur === 'shortB'">
+            <div class="text-center leading-10">
+              <p class="text-slate-400">Short Break</p>
+              <h1 class="text-5xl font-semibold">10:00</h1>
+              <p class="text-slate-400">Minute - Second</p>
+            </div>
+          </section>
+          <section class="long-break" v-if="fitur === 'longB'">
+            <div class="text-center leading-10">
+              <p class="text-slate-400">Long Break</p>
+              <h1 class="text-5xl font-semibold">15:00</h1>
+              <p class="text-slate-400">Minute - Second</p>
+            </div>
+          </section>
         </div>
       </div>
     </section>
@@ -146,17 +160,56 @@ onMounted(() => {})
         <h6>Time {{ formatTitle(fitur) }}</h6>
       </div>
       <div class="mt-6 flex justify-center">
-        <button
-          v-if="button"
-          class="text-white py-2 px-6 rounded-lg"
-          :class="formatTheme(fitur)"
-          @click="start()"
-        >
-          START
-        </button>
-        <button v-if="!button" class="text-white py-2 px-6 rounded-lg" :class="formatTheme(fitur)">
-          STOP
-        </button>
+        <section class="work-session" v-if="fitur === 'working'">
+          <button
+            v-if="!button"
+            class="text-white py-2 px-6 rounded-lg"
+            :class="formatTheme(fitur)"
+            @click="startCount()"
+          >
+            START
+          </button>
+          <button
+            v-if="button"
+            class="text-white py-2 px-6 rounded-lg bg-gradient-to-t from-red-600 to-red-400"
+            :class="formatTheme(fitur)"
+            @click="stopCount()"
+          >
+            STOP
+          </button>
+        </section>
+        <section class="short-break" v-if="fitur === 'shortB'">
+          <button
+            v-if="!button"
+            class="text-white py-2 px-6 rounded-lg"
+            :class="formatTheme(fitur)"
+          >
+            START
+          </button>
+          <button
+            v-if="button"
+            class="text-white py-2 px-6 rounded-lg bg-gradient-to-t from-red-600 to-red-400"
+            :class="formatTheme(fitur)"
+          >
+            STOP
+          </button>
+        </section>
+        <section class="long-break" v-if="fitur === 'longB'">
+          <button
+            v-if="!button"
+            class="text-white py-2 px-6 rounded-lg"
+            :class="formatTheme(fitur)"
+          >
+            START
+          </button>
+          <button
+            v-if="button"
+            class="text-white py-2 px-6 rounded-lg bg-gradient-to-t from-red-600 to-red-400"
+            :class="formatTheme(fitur)"
+          >
+            STOP
+          </button>
+        </section>
       </div>
       <div class="shadow-lg rounded-lg p-4 mt-4">
         <div class="flex justify-between pb-2">
