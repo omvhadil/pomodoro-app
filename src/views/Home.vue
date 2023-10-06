@@ -1,7 +1,13 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, reactive, watchEffect } from 'vue'
 
+const db = reactive({
+  data: JSON.parse(localStorage.getItem('tasks') || '[]'),
+  task: '',
+  mode: 'add',
+  selected: null
+})
 const addTask = ref(false)
 const fitur = ref('working')
 const workMinute = ref(25)
@@ -11,7 +17,36 @@ const shortSecond = ref(0)
 const longMinute = ref(15)
 const longSecond = ref(0)
 const button = ref(false)
+const toggleTask = ref(false)
 let timeout
+
+const createTasks = () => {
+  if (db.mode === 'add') {
+    db.data.push({
+      task: db.task
+    }),
+      (db.task = ''),
+      (addTask.value = false)
+  } else {
+    // mode edit
+    db.data[db.selected].task = db.task
+    db.task = ''
+    addTask.value = false
+    db.mode = 'add'
+  }
+}
+
+const delTasks = (index) => {
+  db.data.splice(index, 1)
+}
+
+const delAllTasks = () => {
+  db.data = []
+}
+
+watchEffect(() => {
+  localStorage.setItem('tasks', JSON.stringify(db.data))
+})
 
 const shound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-clock-tick-tock-fast-916.mp3')
 
@@ -150,7 +185,7 @@ const formatTitle = (title) => {
       ></path>
     </svg>
   </div>
-  <div class="max-w-[550px] h-[100vh] mx-auto relative">
+  <main class="main max-w-[550px] h-[100vh] mx-auto relative">
     <!-- header -->
     <header class="header w-full">
       <div class="container h-14 flex items-center justify-between">
@@ -161,23 +196,29 @@ const formatTitle = (title) => {
         </div>
       </div>
     </header>
-    <div class="flex justify-center gap-4 mt-8 text-white">
-      <button
-        @click="(fitur = 'working'), resetWork()"
-        :class="fitur === 'working' ? 'font-bold' : ''"
-      >
-        Working
-      </button>
-      <button
-        @click="(fitur = 'shortB'), resetWork()"
-        :class="fitur === 'shortB' ? 'font-bold' : ''"
-      >
-        Short Break
-      </button>
-      <button @click="(fitur = 'longB'), resetWork()" :class="fitur === 'longB' ? 'font-bold' : ''">
-        Long Break
-      </button>
-    </div>
+    <!-- fitur -->
+    <section class="fitur">
+      <div class="flex justify-center gap-4 mt-8 text-white">
+        <button
+          @click="(fitur = 'working'), resetWork()"
+          :class="fitur === 'working' ? 'font-bold' : ''"
+        >
+          Working
+        </button>
+        <button
+          @click="(fitur = 'shortB'), resetWork()"
+          :class="fitur === 'shortB' ? 'font-bold' : ''"
+        >
+          Short Break
+        </button>
+        <button
+          @click="(fitur = 'longB'), resetWork()"
+          :class="fitur === 'longB' ? 'font-bold' : ''"
+        >
+          Long Break
+        </button>
+      </div>
+    </section>
     <!-- clock -->
     <section class="clock">
       <div
@@ -217,110 +258,193 @@ const formatTitle = (title) => {
         </div>
       </div>
     </section>
-    <section class="container mt-4">
-      <div class="text-center">
-        <h6>Time {{ formatTitle(fitur) }}</h6>
-      </div>
-      <div class="mt-6 flex justify-center">
-        <section class="work-session" v-if="fitur === 'working'">
-          <button
-            v-if="!button"
-            class="text-white py-3 px-16 rounded-lg"
-            :class="formatTheme(fitur)"
-            @click="startCount()"
-          >
-            START
-          </button>
-          <button
-            v-if="button"
-            class="text-white py-3 px-16 rounded-lg bg-gradient-to-t from-red-600 to-red-400"
-            :class="formatTheme(fitur)"
-            @click="stopCount()"
-          >
-            STOP
-          </button>
-        </section>
-        <section class="short-break" v-if="fitur === 'shortB'">
-          <button
-            v-if="!button"
-            class="text-white py-3 px-16 rounded-lg"
-            :class="formatTheme(fitur)"
-            @click="startCount()"
-          >
-            START
-          </button>
-          <button
-            v-if="button"
-            class="text-white py-3 px-16 rounded-lg bg-gradient-to-t from-red-600 to-red-400"
-            :class="formatTheme(fitur)"
-            @click="stopCount()"
-          >
-            STOP
-          </button>
-        </section>
-        <section class="long-break" v-if="fitur === 'longB'">
-          <button
-            v-if="!button"
-            class="text-white py-3 px-16 rounded-lg"
-            :class="formatTheme(fitur)"
-            @click="startCount()"
-          >
-            START
-          </button>
-          <button
-            v-if="button"
-            class="text-white py-3 px-16 rounded-lg bg-gradient-to-t from-red-600 to-red-400"
-            :class="formatTheme(fitur)"
-            @click="stopCount()"
-          >
-            STOP
-          </button>
-        </section>
-      </div>
-      <div class="shadow-lg rounded-lg p-4 mt-4">
-        <div class="flex justify-between pb-2">
-          <span>Tasks</span>
-          <button><i class="ri-more-2-fill"></i></button>
+    <!-- button start -->
+    <section class="button-start">
+      <div class="container mt-4">
+        <div class="text-center">
+          <h6>Time {{ formatTitle(fitur) }}</h6>
         </div>
-        <hr />
-        <div class="mt-2">
-          <!-- list task -->
-          <div class="flex justify-between bg-slate-200 py-3 px-2 rounded-md">
-            <span class="font-semibold text-slate-600">Excemple Task One</span>
-            <div class="flex text-slate-500">
-              <button class="px-2" title="Edit"><i class="ri-edit-2-line"></i></button>
-              <button class="px-2" title="Hapus"><i class="ri-delete-bin-6-line"></i></button>
-            </div>
-          </div>
-        </div>
-        <!-- card add task -->
-        <div v-if="addTask" class="border w-full mt-2 rounded-lg p-3">
-          <input
-            type="text"
-            placeholder="What are you working on?"
-            class="focus:outline-none w-full"
-          />
-          <div class="flex gap-2 mt-4 justify-end">
+        <div class="mt-6 flex justify-center">
+          <section class="work-session" v-if="fitur === 'working'">
             <button
-              @click="addTask = false"
-              class="bg-slate-100 text-slate-500 hover:bg-slate-200 py-1 px-3 rounded-lg flex items-center"
+              v-if="!button"
+              class="text-white py-3 px-16 rounded-lg"
+              :class="formatTheme(fitur)"
+              @click="startCount()"
             >
-              Cancel
+              START
             </button>
-            <button class="bg-black text-white py-1 px-3 rounded-lg flex items-center">Save</button>
-          </div>
+            <button
+              v-if="button"
+              class="text-white py-3 px-16 rounded-lg bg-gradient-to-t from-red-600 to-red-400"
+              :class="formatTheme(fitur)"
+              @click="stopCount()"
+            >
+              STOP
+            </button>
+          </section>
+          <section class="short-break" v-if="fitur === 'shortB'">
+            <button
+              v-if="!button"
+              class="text-white py-3 px-16 rounded-lg"
+              :class="formatTheme(fitur)"
+              @click="startCount()"
+            >
+              START
+            </button>
+            <button
+              v-if="button"
+              class="text-white py-3 px-16 rounded-lg bg-gradient-to-t from-red-600 to-red-400"
+              :class="formatTheme(fitur)"
+              @click="stopCount()"
+            >
+              STOP
+            </button>
+          </section>
+          <section class="long-break" v-if="fitur === 'longB'">
+            <button
+              v-if="!button"
+              class="text-white py-3 px-16 rounded-lg"
+              :class="formatTheme(fitur)"
+              @click="startCount()"
+            >
+              START
+            </button>
+            <button
+              v-if="button"
+              class="text-white py-3 px-16 rounded-lg bg-gradient-to-t from-red-600 to-red-400"
+              :class="formatTheme(fitur)"
+              @click="stopCount()"
+            >
+              STOP
+            </button>
+          </section>
         </div>
-        <!-- btn add task -->
-        <button
-          v-if="!addTask"
-          @click="addTask = true"
-          class="flex gap-2 text-slate-400 border w-full justify-center py-2 mt-3 rounded-lg bg-slate-100 hover:bg-slate-200"
-        >
-          <i class="ri-add-circle-fill"></i>Add Task
-        </button>
       </div>
     </section>
-  </div>
+    <!-- tasks -->
+    <section class="tasks">
+      <div class="container mt-6">
+        <div class="shadow-lg rounded-lg p-4">
+          <div class="flex justify-between pb-2">
+            <span>Tasks</span>
+            <div class="relative inline-block text-left">
+              <div>
+                <button @click="toggleTask = !toggleTask"><i class="ri-more-2-fill"></i></button>
+              </div>
+              <div
+                v-if="toggleTask"
+                class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                role="menu"
+                aria-orientation="vertical"
+                aria-labelledby="menu-button"
+                tabindex="-1"
+              >
+                <div class="py-1" role="none">
+                  <div
+                    class="text-gray-700 flex justify-between gap-2 px-4 py-2 text-sm"
+                    role="menuitem"
+                    tabindex="-1"
+                    id="menu-item-0"
+                  >
+                    <span>Save as template </span><i class="ri-git-repository-private-fill"></i>
+                  </div>
+                  <div
+                    class="text-gray-700 flex gap-2 justify-between px-4 py-2 text-sm"
+                    role="menuitem"
+                    tabindex="-1"
+                    id="menu-item-1"
+                  >
+                    <span>Add from template </span><i class="ri-git-repository-private-fill"></i>
+                  </div>
+                  <div
+                    class="text-gray-700 flex gap-2 justify-between px-4 py-2 text-sm"
+                    role="menuitem"
+                    tabindex="-1"
+                    id="menu-item-2"
+                  >
+                    <span>Import from Todo Tasks </span
+                    ><i class="ri-git-repository-private-fill"></i>
+                  </div>
+                  <div
+                    class="text-gray-700 flex gap-2 justify-between px-4 py-2 text-sm"
+                    role="menuitem"
+                    tabindex="-1"
+                    id="menu-item-2"
+                    @click="delAllTasks()"
+                  >
+                    <span>Clear all tasks </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <hr />
+          <div class="mt-2 grid grid-cols-1 gap-2">
+            <!-- list task -->
+            <div
+              v-for="(item, index) in db.data"
+              :key="index"
+              class="flex justify-between bg-slate-200 py-3 px-2 rounded-md"
+            >
+              <span class="font-semibold text-slate-600">{{ item.task }}</span>
+              <div class="flex text-slate-500">
+                <button
+                  @click="
+                    (db.mode = 'edit'),
+                      (db.selected = index),
+                      (addTask = true),
+                      (db.task = item.task)
+                  "
+                  class="px-2"
+                  title="Edit"
+                >
+                  <i class="ri-edit-2-line"></i>
+                </button>
+                <button @click="delTasks(index)" class="px-2" title="Hapus">
+                  <i class="ri-delete-bin-6-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- card add task -->
+          <div v-if="addTask" class="border w-full mt-2 rounded-lg p-3">
+            <form @submit.prevent="createTasks()">
+              <input
+                type="text"
+                placeholder="What are you working on?"
+                class="focus:outline-none w-full"
+                v-model="db.task"
+              />
+              <div class="flex gap-2 mt-4 justify-end">
+                <button
+                  type="button"
+                  @click="addTask = false"
+                  class="bg-slate-100 text-slate-500 hover:bg-slate-200 py-1 px-3 rounded-lg flex items-center"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  class="bg-black text-white py-1 px-3 rounded-lg flex items-center"
+                >
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+          <!-- btn add task -->
+          <button
+            v-if="!addTask"
+            @click="addTask = true"
+            class="flex gap-2 text-slate-400 border w-full justify-center py-2 mt-3 rounded-lg bg-slate-100 hover:bg-slate-200"
+          >
+            <i class="ri-add-circle-fill"></i>Add Task
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
 </template>
 
 <style scoped></style>
